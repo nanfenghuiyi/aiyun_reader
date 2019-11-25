@@ -187,12 +187,13 @@ export default {
       bookList: [],
       page: 1,
       total: 1,
-      totalShow: true,
+      totalShow: false,
     };
   },
   methods: {
     // 数据获取
     loadMore(e) {
+      JsInterface.showAndroidLoading();
       this.$refs.mySwiper.swiper.slideTo(1, 1, true);
       var url='/Web/book/page';
       if (e==1) {
@@ -202,45 +203,64 @@ export default {
         // this.$store.commit('pageStorage',{page: page});
         this.page = page;
       }
-      // var obj={page: page, page_size: 3, token: 'BzEyLsfs/S4hI8ReM0tyAg=='}
-      var token = window.getUserId ? window.getUserId() :  window.JsInterface.getUserId();
-      var obj={page: page, page_size: 3, token: token}
+      // var obj={page: page, page_size: 3, token: 'fgex7T7PIXJ9bZxBPw1SMf65WbfUZC/L'}
+      // var token = window.getUserId ? window.getUserId() :  window.JsInterface.getUserId();
+      // if (window.getUserId != null && window.getUserId != undefined) {
+      //   var token = window.getUserId();
+      //   console.log('loadMore===进入后',token)
+      // }
+      var obj={page: page, page_size: 3, token: this.token}
       console.log(obj)
       this.axios.post(url,obj)
       .then(res=>{
-        console.log(res)
+        console.log('请求成功获取的结果====',res)
         var data = res.data;
         this.total = Math.ceil(data.data.total / 3);
-        // console.log(this.total)
-        // console.log(data.data)
         if (data.data.total>0) {
           this.totalShow = false;
+        }else {
+          this.totalShow = true
         }
+        JsInterface.dismissAndroidLoading();
         this.bookList = data.data.records
       }).catch(err=>
-        console.log(err)
+        JsInterface.dismissAndroidLoading(),
+        // console.log(err)
       )
     },
     // 返回第一页
     goFirstPage() {
       this.loadMore(2);
       this.$refs.mySwiper.swiper.slideTo(1, 1, true);
-    }
+    },
+    getToken() {
+      console.log("JsInterface===",JsInterface)
+      this.token = JsInterface.getToken();
+      this.loadMore(1)
+      console.log("getToken token = " + this.token);
+    },
   },
   created() {
+    // console.log(window.getUserId())
+    // this.token = window.getUserId();
+    // this.loadMore(1);
   },
   mounted() {
-    // 获得页数
-    // this.page = JSON.parse(localStorage.getItem('page')).page;
-    // console.log(this.page);
-    // this.token = window.getUserId != undefined ? window.getUserId() :  window.JsInterface.getUserId();
-    // console.log(id)
-    // 获得用户id
-    // let userId = window.userId ? window.userId :  window.AiYunInterface.getUserId();
-    // var width = window.getUserId() ? window.getUserId() :  window.JsInterface.getUserId()
-    // console.log(userId)
     // 初始化页面
-    this.loadMore(1);
+    var u = navigator.userAgent;
+    console.log('终端判断===',u)
+    var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1; //android终端
+    var isiOS = !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/); //ios终端
+    if (isAndroid) {
+      this.getToken();
+    }else if (isiOS) {
+      this.token = window.getUserId();
+      this.loadMore(1);
+    }
+    
+  },
+  beforeUpdate () {
+    console.log('当前数据发生更改')
   }
 };
 </script>

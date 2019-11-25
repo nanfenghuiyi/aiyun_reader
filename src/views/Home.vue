@@ -1,14 +1,87 @@
 <template>
   <div class="container">
-    <swiper :options="swiperOption" ref="mySwiper" @click="changeMenu">
-      <swiper-slide class="swiper-style" v-for="count in tListNum" :key="count">
+    <div v-if="totalShow" class="container-title" @touchmove.prevent>
+      当前没有数据，请到宗族页面添加
+    </div>
+    <div v-else class="swiper-page">
+      第{{page}}页 共{{total}}页
+    </div>
+    <swiper :options="swiperOption" ref="mySwiper" :class="{'swiper-no-swiping':totalShow}">
+      <swiper-slide></swiper-slide>
+      <swiper-slide class="swiper-style" v-for="count in bookListNum" :key="count">
         <div class="section-swiper">
+          <!-- <van-row justify="center" class="van-row" v-for="(item, i) of bookList" :key="i">
+            <van-col class="van-col border-right" span="4" >
+              <div class="border-bottem">世系</div>
+              <div style="height:60px" class="border-bottem">{{item.generation}}</div>
+              <div style="height:30px" class="border-bottem">兄妹 {{item.sibling_count}}人</div>
+              <div style="height:30px" class="border-bottem">{{item.rank}}</div>
+              <div style="height:30px" class="">个人简介</div>
+            </van-col>
+            <van-col class="van-col" span="8">
+              <div class="border-bottem border-right">本人</div>
+              <div class="border-right">
+                <div class="van-adress border-bottem">
+                  <div class="van-name">{{ item.self.name }}</div>
+                  <div class="van-title border-right border-left border-width">
+                    <div class="border-bottem">生</div>
+                    <div>卒</div>
+                  </div>
+                  <div  class="van-time">
+                    <div class="border-bottem">{{item.self.birthday!=''?item.self.birthday:'无'}}</div>
+                    <div>1990-01-12</div>
+                  </div>
+                </div>
+              </div>
+              <div class="border-bottem border-right user-img">
+                <img v-lazy="item.self.head_img!=null?item.self.head_img:'无'" alt="照片" />
+              </div>
+            </van-col>
+            <van-col class="van-col" span="8">
+              <div class="border-bottem border-right">配偶</div>
+              <div class="border-bottem">
+                <div class="van-adress border-right">
+                  <div class="van-name">张三三</div>
+                  <div class="van-title border-right border-left border-width">
+                    <div class="border-bottem">生</div>
+                    <div>卒</div>
+                  </div>
+                  <div class="van-time">
+                    <div class="border-bottem">{{item.couple!=null?item.couple.birthday:'无'}}</div>
+                    <div>无</div>
+                  </div>
+                </div>
+              </div>
+              <div class="border-bottem border-right user-img">
+                <img v-lazy="item.couple!=null?item.self.head_img:'无'" alt="照片" />
+              </div>
+            </van-col>
+            <van-col class="van-col" span="2">
+              <div class="border-bottem border-right">父母</div>
+              <div style="height:120px" class="border-bottem  border-right">
+                <ul v-for="(parent, index) of item.parents" :key="index" v-if="item.parents!=null">
+                  <li>{{parent.name}}</li>
+                </ul>
+              </div>
+            </van-col>
+            <van-col class="van-col" span="2">
+              <div class="border-bottem">孩子</div>
+              <div style="height:120px"  class="border-bottem">
+                <ul v-for="(child, index) of item.children" :key="index" v-if="item.children!=null">
+                  <li>{{child.name}}</li>
+                </ul>
+              </div>
+            </van-col>
+            <van-col class="van-col user-introduce" span="20">
+              <div class="user-introduce-style">个人简介
+              </div>
+            </van-col>
+          </van-row> -->
           <table
             border="1"
-            v-for="(item, i) of testList[index].slice(testListStart, testListEnd)"
-            :key="i"
-          >
-            <tr style="height: 20px">
+            v-for="(item, i) of bookList"
+            :key="i">
+            <tr>
               <th>世系</th>
               <th colspan="4">本人</th>
               <th colspan="4">配偶</th>
@@ -16,15 +89,23 @@
               <th>孩子</th>
             </tr>
             <tr>
-              <td rowspan="4" style="height:60px">{{item.sx}}</td>
-              <td rowspan="2">{{item.name}}</td>
+              <td rowspan="4">{{item.generation}}</td>
+              <td rowspan="2">{{ item.self.name }}</td>
               <td>生</td>
-              <td colspan="2">{{item.b1}}</td>
-              <td rowspan="2">{{item.uname}}</td>
+              <td colspan="2">{{item.self.birthday!=''?item.self.birthday:'无'}}</td>
+              <td rowspan="2">{{item.couple!=null?item.couple.name:'无'}}</td>
               <td>生</td>
-              <td colspan="2">{{item.b2}}</td>
-              <td rowspan="6">{{item.fname}}</td>
-              <td rowspan="6">{{item.cname}}</td>
+              <td colspan="2">{{item.couple!=null?item.couple.birthday:'无'}}</td>
+              <td rowspan="6">
+                <ul v-for="(parent, index) of item.parents" :key="index" v-if="item.parents!=null">
+                  <li>{{parent.name}}</li>
+                </ul>
+              </td>
+              <td rowspan="6" class="child-style">
+                <ul v-for="(child, index) of item.children" :key="index" v-if="item.children!=null">
+                  <li>{{child.name}}</li>
+                </ul>
+              </td>
             </tr>
             <tr>
               <td>卒</td>
@@ -34,77 +115,40 @@
             </tr>
             <tr class="section-table-img">
               <td colspan="4" rowspan="4">
-                <img v-lazy="item.src1" alt="照片" />
+                <img v-lazy="item.self.head_img" alt="照片" />
               </td>
               <td colspan="4" rowspan="4">
-                <img v-lazy="item.src2" alt="照片" />
+                <img v-lazy="item.couple!=null?item.self.head_img:'无'" alt="照片" />
               </td>
             </tr>
             <tr></tr>
             <tr>
-              <td style="height: 20px">兄妹 1人</td>
+              <td>兄妹 {{item.sibling_count}}人</td>
             </tr>
             <tr>
-              <td style="height: 20px">排行 1人</td>
+              <td>{{item.rank}}</td>
             </tr>
             <tr>
-              <td style="height: 40px">本人简介</td>
-              <td colspan="10">{{item.introduction}}</td>
+              <td>本人简介</td>
+              <td colspan="10" class="user-td-introduce">{{item.self.brief}}</td>
             </tr>
           </table>
         </div>
       </swiper-slide>
+      <swiper-slide>
+        <van-button class="btn" color="#EAC257" @click="goFirstPage">点击回到第 1 页</van-button>
+      </swiper-slide>
       <div class="swiper-pagination" slot="pagination"></div>
     </swiper>
-    <!-- 菜单 -->
-    <div class="section-menu">
-      <van-popup v-model="menuShow" position="bottom" :style="{ height: '20%' }">
-        <div class="section-menu-check">
-          <div @click="genealogyPrev">上一页</div>
-          <div class="section-menu-slider">
-            <van-slider v-model="sliderValue" disabled active-color="#ee0a24">
-              <div slot="button" class="custom-button">{{ sliderValue }}</div>
-            </van-slider>
-          </div>
-          <div @click="genealogyNext">下一页</div>
-        </div>
-        <div @click="GenealogyList">
-          <p>
-            <i class="icon iconfont icon-caidan"></i>
-          </p>目录
-        </div>
-      </van-popup>
-    </div>
-    <!-- 目录 -->
-    <div class="section-genealogy">
-      <van-popup v-model="genealogyShow" position="left" :style="{ with: '100%', height: '100%'}">
-        <div class="genealogy-header" @click="goBack">
-          <i class="el-icon-arrow-left"></i>
-          <p>目 录</p>
-        </div>
-        <ul class="genealogy-section">
-          <li
-            :class="{genealogyActive:genealogyChecked==index}"
-            v-for="(item, index) of testList.length"
-            :key="index"
-            @click="genealogyCheck(index)"
-          >{{item}}</li>
-        </ul>
-      </van-popup>
-    </div>
   </div>
 </template>
 
 <script>
+
 export default {
   data() {
     return {
       swiperOption: {
-        pagination: {
-          el: '.swiper-pagination',
-          clickable:true,
-          type : 'progressbar',
-        }, // 分页器
         autoplay: false, // 自动播放
         loop: false, // 循环播放
         on: {
@@ -112,361 +156,92 @@ export default {
           transitionEnd: () => {
             // 通过$refs获取对应的swiper对象
             let swiper = this.$refs.mySwiper.swiper;
-            // console.log(swiper)
             this.swiperindex = swiper.activeIndex;
-            // console.log(this.swiperindex);
-            // location.href = flag.url;
-            if (this.swiperindex > 0) {
-              this.testListStart = this.swiperindex * 3;
-              this.testListEnd = this.swiperindex * 3 + 3;
-            } else {
-              this.testListStart = 0;
-              this.testListEnd = 3;
-            };
-            // console.log(this.testListStart, "+", this.testListEnd);
-          }
-        }
+            if (this.swiperindex>1) {
+              if (this.page<this.total) {
+                this.page++;
+                // this.$store.commit('pageStorage',{page: this.page});
+                this.loadMore(1);
+                // this.$refs.mySwiper.swiper.slideTo(1, 1, true);
+              }else {
+                this.$toast('最后一页')
+              }
+            }else if(this.swiperindex==0){
+              if (2<=this.page) {
+                this.page--;
+                // this.$store.commit('pageStorage',{page: this.page});
+                this.loadMore(1);
+                // this.$refs.mySwiper.swiper.slideTo(1, 1, true);
+              }else {
+                this.$refs.mySwiper.swiper.slideTo(1, 1, true);
+                this.$toast('第一页');
+                return
+              }
+            }
+          },
+        },
       },
-
-      tListNum: 1, // 测试页数
-      testListStart: 0, // 测试开始页
-      testListEnd: 3, // 测试结束页
-      index: 0, // 测试章节
-      testList: [
-        [
-          {
-            sx: "一世",
-            name: "张三",
-            b1: "1978.10.10",
-            s1: "2017.12.2",
-            src1:
-              "http://b-ssl.duitang.com/uploads/blog/201312/04/20131204184148_hhXUT.jpeg",
-            uname: "李四",
-            b2: "1978.10.10",
-            s2: "2017.12.2",
-            src2:
-              "http://b-ssl.duitang.com/uploads/blog/201401/07/20140107171234_3W2RC.jpeg",
-            fname: "张钱",
-            cname: "李馨",
-            introduction: "南高架上的oil叫哦我"
-          },
-          {
-            sx: "一世",
-            name: "张三",
-            b1: "1978.10.10",
-            s1: "2017.12.2",
-            src1:
-              "http://b-ssl.duitang.com/uploads/blog/201312/04/20131204184148_hhXUT.jpeg",
-            uname: "李四",
-            b2: "1978.10.10",
-            s2: "2017.12.2",
-            src2:
-              "http://b-ssl.duitang.com/uploads/blog/201401/07/20140107171234_3W2RC.jpeg",
-            fname: "张钱",
-            cname: "李馨",
-            introduction: "南高架上的oil叫哦我"
-          },
-          {
-            sx: "一世",
-            name: "张三",
-            b1: "1978.10.10",
-            s1: "2017.12.2",
-            src1:
-              "http://b-ssl.duitang.com/uploads/blog/201312/04/20131204184148_hhXUT.jpeg",
-            uname: "李四",
-            b2: "1978.10.10",
-            s2: "2017.12.2",
-            src2:
-              "http://b-ssl.duitang.com/uploads/blog/201401/07/20140107171234_3W2RC.jpeg",
-            fname: "张钱",
-            cname: "李馨",
-            introduction: "南高架上的oil叫哦我"
-          },
-          {
-            sx: "二世",
-            name: "张三",
-            b1: "1978.10.10",
-            s1: "2017.12.2",
-            src1:
-              "http://b-ssl.duitang.com/uploads/blog/201312/04/20131204184148_hhXUT.jpeg",
-            uname: "李四",
-            b2: "1978.10.10",
-            s2: "2017.12.2",
-            src2:
-              "http://b-ssl.duitang.com/uploads/blog/201401/07/20140107171234_3W2RC.jpeg",
-            fname: "张钱",
-            cname: "李馨",
-            introduction: "南高架上的oil叫哦我"
-          },
-          {
-            sx: "二世",
-            name: "张三",
-            b1: "1978.10.10",
-            s1: "2017.12.2",
-            src1:
-              "http://b-ssl.duitang.com/uploads/blog/201312/04/20131204184148_hhXUT.jpeg",
-            uname: "李四",
-            b2: "1978.10.10",
-            s2: "2017.12.2",
-            src2:
-              "http://b-ssl.duitang.com/uploads/blog/201401/07/20140107171234_3W2RC.jpeg",
-            fname: "张钱",
-            cname: "李馨",
-            introduction: "南高架上的oil叫哦我"
-          },
-          {
-            sx: "二世",
-            name: "张三",
-            b1: "1978.10.10",
-            s1: "2017.12.2",
-            src1:
-              "http://b-ssl.duitang.com/uploads/blog/201312/04/20131204184148_hhXUT.jpeg",
-            uname: "李四",
-            b2: "1978.10.10",
-            s2: "2017.12.2",
-            src2:
-              "http://b-ssl.duitang.com/uploads/blog/201401/07/20140107171234_3W2RC.jpeg",
-            fname: "张钱",
-            cname: "李馨",
-            introduction: "南高架上的oil叫哦我"
-          },
-          {
-            sx: "三世",
-            name: "张三",
-            b1: "1978.10.10",
-            s1: "2017.12.2",
-            src1:
-              "http://b-ssl.duitang.com/uploads/blog/201312/04/20131204184148_hhXUT.jpeg",
-            uname: "李四",
-            b2: "1978.10.10",
-            s2: "2017.12.2",
-            src2:
-              "http://b-ssl.duitang.com/uploads/blog/201401/07/20140107171234_3W2RC.jpeg",
-            fname: "张钱",
-            cname: "李馨",
-            introduction: "南高架上的oil叫哦我"
-          }
-        ],
-        [
-          {
-            sx: "1 世",
-            name: "张三",
-            b1: "1978.10.10",
-            s1: "2017.12.2",
-            src1:
-              "http://b-ssl.duitang.com/uploads/blog/201312/04/20131204184148_hhXUT.jpeg",
-            uname: "李四",
-            b2: "1978.10.10",
-            s2: "2017.12.2",
-            src2:
-              "http://b-ssl.duitang.com/uploads/blog/201401/07/20140107171234_3W2RC.jpeg",
-            fname: "张钱",
-            cname: "李馨",
-            introduction: "南高架上的oil叫哦我"
-          },
-          {
-            sx: "1 世",
-            name: "张三",
-            b1: "1978.10.10",
-            s1: "2017.12.2",
-            src1:
-              "http://b-ssl.duitang.com/uploads/blog/201312/04/20131204184148_hhXUT.jpeg",
-            uname: "李四",
-            b2: "1978.10.10",
-            s2: "2017.12.2",
-            src2:
-              "http://b-ssl.duitang.com/uploads/blog/201401/07/20140107171234_3W2RC.jpeg",
-            fname: "张钱",
-            cname: "李馨",
-            introduction: "南高架上的oil叫哦我"
-          },
-          {
-            sx: "1 世",
-            name: "张三",
-            b1: "1978.10.10",
-            s1: "2017.12.2",
-            src1:
-              "http://b-ssl.duitang.com/uploads/blog/201312/04/20131204184148_hhXUT.jpeg",
-            uname: "李四",
-            b2: "1978.10.10",
-            s2: "2017.12.2",
-            src2:
-              "http://b-ssl.duitang.com/uploads/blog/201401/07/20140107171234_3W2RC.jpeg",
-            fname: "张钱",
-            cname: "李馨",
-            introduction: "南高架上的oil叫哦我"
-          },
-          {
-            sx: "2 世",
-            name: "张三",
-            b1: "1978.10.10",
-            s1: "2017.12.2",
-            src1:
-              "http://b-ssl.duitang.com/uploads/blog/201312/04/20131204184148_hhXUT.jpeg",
-            uname: "李四",
-            b2: "1978.10.10",
-            s2: "2017.12.2",
-            src2:
-              "http://b-ssl.duitang.com/uploads/blog/201401/07/20140107171234_3W2RC.jpeg",
-            fname: "张钱",
-            cname: "李馨",
-            introduction: "南高架上的oil叫哦我"
-          },
-          {
-            sx: "2 世",
-            name: "张三",
-            b1: "1978.10.10",
-            s1: "2017.12.2",
-            src1:
-              "http://b-ssl.duitang.com/uploads/blog/201312/04/20131204184148_hhXUT.jpeg",
-            uname: "李四",
-            b2: "1978.10.10",
-            s2: "2017.12.2",
-            src2:
-              "http://b-ssl.duitang.com/uploads/blog/201401/07/20140107171234_3W2RC.jpeg",
-            fname: "张钱",
-            cname: "李馨",
-            introduction: "南高架上的oil叫哦我"
-          },
-          {
-            sx: "2 世",
-            name: "张三",
-            b1: "1978.10.10",
-            s1: "2017.12.2",
-            src1:
-              "http://b-ssl.duitang.com/uploads/blog/201312/04/20131204184148_hhXUT.jpeg",
-            uname: "李四",
-            b2: "1978.10.10",
-            s2: "2017.12.2",
-            src2:
-              "http://b-ssl.duitang.com/uploads/blog/201401/07/20140107171234_3W2RC.jpeg",
-            fname: "张钱",
-            cname: "李馨",
-            introduction: "南高架上的oil叫哦我"
-          },
-          {
-            sx: "3 世",
-            name: "张三",
-            b1: "1978.10.10",
-            s1: "2017.12.2",
-            src1:
-              "http://b-ssl.duitang.com/uploads/blog/201312/04/20131204184148_hhXUT.jpeg",
-            uname: "李四",
-            b2: "1978.10.10",
-            s2: "2017.12.2",
-            src2:
-              "http://b-ssl.duitang.com/uploads/blog/201401/07/20140107171234_3W2RC.jpeg",
-            fname: "张钱",
-            cname: "李馨",
-            introduction: "南高架上的oil叫哦我"
-          },
-          {
-            sx: "3 世",
-            name: "张三",
-            b1: "1978.10.10",
-            s1: "2017.12.2",
-            src1:
-              "http://b-ssl.duitang.com/uploads/blog/201312/04/20131204184148_hhXUT.jpeg",
-            uname: "李四",
-            b2: "1978.10.10",
-            s2: "2017.12.2",
-            src2:
-              "http://b-ssl.duitang.com/uploads/blog/201401/07/20140107171234_3W2RC.jpeg",
-            fname: "张钱",
-            cname: "李馨",
-            introduction: "南高架上的oil叫哦我"
-          }
-        ]
-      ],
-
-      menuShow: false, // 菜单显示
-      sliderValue: 0, // 进度条
-      genealogyShow: false, // 目录显示
-      genealogyChecked: 0, // 列表选中
-      genealogyList: [
-        "家谱序言",
-        "姓氏来源",
-        "家规家训",
-        "家族照",
-        "世系表",
-        "世系表",
-        "世系表"
-      ] // 目录列表
+      token: '',
+      swiperindex: 0,
+      bookListNum: 1, // 页数
+      bookList: [],
+      page: 1,
+      total: 1,
+      totalShow: true,
     };
   },
-  components: {},
-  props: {},
-  watch: {},
-  computed: {},
   methods: {
-    // 菜单
-    changeMenu() {
-      this.menuShow = true;
-    },
-    // 目录选择
-    GenealogyList() {
-      this.menuShow = false;
-      // console.log("目录详情");
-      this.genealogyShow = true;
-    },
-    // 切换
-    genealogyPrev() {
-      if (this.index > 0) {
-        this.index -= 1;
-        this.genealogyChecked = this.index;
-        this.$refs.mySwiper.swiper.slideTo(0, 1, true); // 返回第一张
-        this.sliderValue=((this.genealogyChecked+1)/this.testList.length).toFixed(2)*100
-        // console.log(this.sliderValue)
-      }
-      if (this.index == 0) {
-        this.$toast("这是首页");
-      }
-    },
-    genealogyNext() {
-      if (this.index < this.testList.length) {
-        this.index += 1;
-        this.genealogyChecked = this.index;
-        this.$refs.mySwiper.swiper.slideTo(0, 1, true);
-        this.sliderValue=Math.floor(((this.genealogyChecked+1)/this.testList.length))*100
-      }
-      if (this.index == this.testList.length) {
-        this.index -= 1;
-        this.$toast("没有更多了");
-        this.genealogyChecked = this.index;
-      }
-      return;
-    },
-    // 返回
-    goBack() {
-      this.genealogyShow = false;
-    },
-    // 目录选择
-    genealogyCheck(index) {
-      this.genealogyChecked = index;
-      this.genealogyShow = false;
-      // console.log("选中的列表是", index);
-      this.index = index;
-      this.sliderValue=((this.genealogyChecked+1)/this.testList.length).toFixed(2)*100
-    }
     // 数据获取
-    /* loadMore() {
-      var url='';
-      console.log(url)
-      this.axios.get(url,{})
+    loadMore(e) {
+      this.$refs.mySwiper.swiper.slideTo(1, 1, true);
+      var url='/Web/book/page';
+      if (e==1) {
+        var page = this.page;
+      }else {
+        var page = 1;
+        // this.$store.commit('pageStorage',{page: page});
+        this.page = page;
+      }
+      // var obj={page: page, page_size: 3, token: 'BzEyLsfs/S4hI8ReM0tyAg=='}
+      var token = window.getUserId ? window.getUserId() :  window.JsInterface.getUserId();
+      var obj={page: page, page_size: 3, token: token}
+      console.log(obj)
+      this.axios.post(url,obj)
       .then(res=>{
         console.log(res)
-      })
-    } */
+        var data = res.data;
+        this.total = Math.ceil(data.data.total / 3);
+        // console.log(this.total)
+        // console.log(data.data)
+        if (data.data.total>0) {
+          this.totalShow = false;
+        }
+        this.bookList = data.data.records
+      }).catch(err=>
+        console.log(err)
+      )
+    },
+    // 返回第一页
+    goFirstPage() {
+      this.loadMore(2);
+      this.$refs.mySwiper.swiper.slideTo(1, 1, true);
+    }
   },
   created() {
-    // this.loadMore();
-    // console.log(this.genealogyChecked);
-    let tList = this.testList[this.index];
-    this.tListNum = Math.ceil(tList.length / 3);
-    this.sliderValue = this.index;
-    this.sliderValue=((this.genealogyChecked+1)/(this.testList.length))*100
   },
-  mounted() {}
+  mounted() {
+    // 获得页数
+    // this.page = JSON.parse(localStorage.getItem('page')).page;
+    // console.log(this.page);
+    // this.token = window.getUserId != undefined ? window.getUserId() :  window.JsInterface.getUserId();
+    // console.log(id)
+    // 获得用户id
+    // let userId = window.userId ? window.userId :  window.AiYunInterface.getUserId();
+    // var width = window.getUserId() ? window.getUserId() :  window.JsInterface.getUserId()
+    // console.log(userId)
+    // 初始化页面
+    this.loadMore(1);
+  }
 };
 </script>
 
@@ -478,96 +253,121 @@ td {
   width: 100%;
   height: 100%;
 }
+.container-title{
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  height: 100%;
+  background: rgba(252,251,231,1);
+  font-size: 18px;
+  padding-top: 60%;
+}
 .swiper-style {
   width: 375px;
-  height: 667px;
+  height: 90%;
+  /* background: red; */
 }
 .swiper-style table {
   width: 100%;
+  height: 30%;
 }
+/* .swiper-style th{
+  width: 20px;
+} */
 .swiper-style td {
   width: 20px;
   height: 20px;
 }
+.swiper-page{
+  padding: 3px 0 0 0;
+}
 .section-swiper {
-  width: 360px;
-  margin: 0 auto;
+  /* width: 360px; */
+  margin: auto 5px;
 }
 .section-swiper > table {
-  margin-top: 15px;
+  margin-top: 5px;
   table-layout: fixed;
 }
 .section-table-img > td > img {
-  width: 100px;
-}
-/* 菜单 */
-.section-menu .section-menu-check {
-  width: 100%;
+  width: 60px;
   height: 60px;
+}
+.child-style{
+  overflow-y: scroll;
+}
+.user-td-introduce{
+  overflow-y: scroll;
+}
+
+/* 弹性布局 */
+.van-row{
+  height: 30%;
+  border: 1px solid red;
+  text-align: center;
+  margin-top: 5px;
+}
+.van-col{
+  height: 80%;
+  box-sizing: border-box;
+  background: #0ff;
+}
+.border-width{
+  width: 20px;
+}
+.border-bottem{
+  border-bottom: 1px solid red;  
+  box-sizing: border-box;
+}
+.border-right{
+  border-right: 1px solid red;  
+  box-sizing: border-box;
+}
+.border-left{
+  border-left: 1px solid red;  
+  box-sizing: border-box;
+}
+.van-adress{
   display: flex;
-  justify-content: center;
+  justify-content:space-between;
   align-items: center;
 }
-.section-menu-slider {
-  width: 200px;
-  padding-right: 25px;
-  padding-left: 25px;
-}
-.custom-button {
-  width: 26px;
-  color: #fff;
-  font-size: 10px;
-  line-height: 18px;
-  text-align: center;
-  background-color: #ee0a24;
-  border-radius: 100px;
-}
-/* 目录 */
-.genealogy-header {
-  width: 375px;
-  height: 40px;
-  line-height: 40px;
-  text-align: left;
-  font-size: 18px;
-  background: #eee;
-  display: flex;
-  align-items: center;
-}
-.el-icon-arrow-left {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 40px;
-  height: 40px;
-  text-align: center;
-  line-height: 40px;
-}
-.genealogy-header > p {
+.van-name,.van-time{
   flex: 1;
-  text-align: center;
 }
-.genealogy-section {
-  width: 375px;
-  height: 627px;
-  overflow: auto;
+.van-title{
+  flex: .5;
 }
-.genealogy-section li {
-  height: 25px;
-  line-height: 25px;
-  /* background: #0ff; */
+.user-img{
+  height: 74px;
 }
-.genealogyActive {
-  color: #fff;
-  background: #e4c139;
+.user-img img{
+  width: 100%;
+  height: 100%;
+}
+.user-introduce{
+  display: flex;
+}
+.user-introduce-style{
+  width: 100%;
+  height: 30px;
+  overflow-y: auto;
+}
+
+
+.btn{
+  margin-top: 80%;
+}
+.progress{
+  width: 95%;
+  border: 1px solid red;
+
 }
 </style>
 
 <style>
 .van-overlay {
   background-color: rgba(0, 0, 0, 0.1) !important;
-}
-/* 分页器位置 */
-.swiper-container-horizontal > .swiper-pagination-progressbar, .swiper-container-vertical > .swiper-pagination-progressbar.swiper-pagination-progressbar-opposite{
-  top: 663px !important;
 }
 </style>

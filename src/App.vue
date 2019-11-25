@@ -13,7 +13,7 @@ export default {
   },
   data() {
     return {
-      isRouterAlive: true
+      isRouterAlive: true,
     }
   },
   methods: {
@@ -22,7 +22,21 @@ export default {
       this.$nextTick(function () {
         this.isRouterAlive = true
       })
+    },
+    autoheight(){
+      var winHeight=0;
+      if (window.innerHeight)
+          winHeight = window.innerHeight;
+      else if ((document.body) && (document.body.clientHeight))
+          winHeight = document.body.clientHeight;
+      if (document.documentElement && document.documentElement.clientHeight)
+          winHeight = document.documentElement.clientHeight;
+      document.getElementById("app").style.height= winHeight +"px";
     }
+  },
+  mounted(){
+    this.autoheight();
+    window.οnresize=this.autoheight; 
   }
 }
 </script>
@@ -32,6 +46,7 @@ html, body, div, ul, li, h1, h2, h3, h4, h5, h6, p, dl, dt, dd, ol, form, input,
   margin: none;
   padding: none;
 }
+
 /* 阿里字体图标设置 */
 .icon, .iconfont {
   font-family:"iconfont" !important;
@@ -56,6 +71,7 @@ body{
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
+  /* background: #0ff; */
 }
 
 #nav {

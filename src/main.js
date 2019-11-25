@@ -29,12 +29,11 @@ Vue.use(VueAwesomeSwiper)
 
 // 或者添加VueLazyload 选项
 Vue.use(VueLazyload, {
-  loading: "/loading.png"
+  loading: "./loading.png"
 })
 
 Vue.config.productionTip = false
 Vue.prototype.$global_msg = global_msg
-Vue.prototype.axios = axios
 
 new Vue({
   router,

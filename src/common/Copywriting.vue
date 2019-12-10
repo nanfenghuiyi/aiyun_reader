@@ -5,10 +5,16 @@
     </div>
     <div v-else >
       <div class="menu" @click="menuPopup">
-        目录
+        搜索
       </div>
+      <div>
       <div class="swiper-page">
         第{{page}}页 共{{total}}页
+        <div>
+          <input type="number" style="width:30px; text-align:center" v-model="pageValue">
+          <button class="jump" @click="pageJump">跳转</button>
+        </div>
+      </div>
       </div>
     </div>
     <!-- 表格展示 -->
@@ -17,9 +23,9 @@
       <swiper-slide class="swiper-style">
         <div class="section-swiper" :style="{ height: scrollerHeight }">
           <el-row class="el-row" v-for="(item, i) of bookList" :key="i">
-            <el-col :span="4"><div class="grid-content bg-purple">{{ item.generation }}</div></el-col>
-            <el-col :span="4"><div class="grid-content bg-purple-light">{{ item.self.name }}</div></el-col>
-            <el-col :span="16"><div class="grid-content bg-purple user-introduce">{{ item.self.brief }}</div></el-col>
+            <el-col :span="4"><div class="grid-content bg-purple user-text-left">{{ item.generation }}</div></el-col>
+            <el-col :span="4"><div class="grid-content bg-purple-light user-text-left">{{ item.name }}</div></el-col>
+            <el-col :span="16"><div class="grid-content bg-purple user-text-left user-introduce">{{ item.brief }}</div></el-col>
           </el-row>
         </div>
       </swiper-slide>
@@ -35,9 +41,6 @@
     <!-- 目录 -->
     <div class="section-genealogy">
       <van-popup v-model="genealogyShow" position="left" :style="{ with: '100%', height: '100%'}">
-        <div class="genealogy-header">
-          <p>世 系 目 录</p>
-        </div>
         <div class="genealogy-search">
           <van-search
             v-model="searchValue"
@@ -64,9 +67,11 @@
             <li :class="{'genealogyActive':genealogyChecked.indexOf(index)>-1}"
               v-for="(item, index) of searchList" :key="index" @click="getSearch(item.user_id, index)">
               {{item.name}}
-              <span class="search-father">父亲 {{item.father_name}}</span>
+              <!-- <span class="search-father">父亲 {{item.father_name}}</span> -->
             </li>
           </ul>
+            <p v-if="resLoading">加载中...</p>
+            <p v-if="noMore">没有更多了</p>
         </div>
       </van-popup>
     </div>
@@ -76,6 +81,7 @@
 <script>
 
 export default {
+  inject: ['reload'],
   data() {
     return {
       // scrollerHeight: '',
@@ -87,27 +93,27 @@ export default {
           transitionEnd: () => {
             // 通过$refs获取对应的swiper对象
             let swiper = this.$refs.mySwiper.swiper;
-            this.swiperindex = swiper.activeIndex;
-            if (this.swiperindex>1) {
-              if (this.page<this.total) {
-                this.page++;
-                // this.$store.commit('pageStorage',{page: this.page});
-                this.loadMore(1);
-                // this.$refs.mySwiper.swiper.slideTo(1, 1, true);
-              }else {
-                this.$toast('最后一页')
+            if (swiper != null) {
+              this.swiperindex = swiper.activeIndex;
+              if (this.swiperindex>1) {
+                if (this.page<this.total) {
+                  this.page++;
+                  this.loadMore(1);
+                }else {
+                  this.$toast('最后一页')
+                }
+              }else if(this.swiperindex==0){
+                if (2<=this.page) {
+                  this.page--;
+                  this.loadMore(1);
+                }else {
+                  this.$refs.mySwiper.swiper.slideTo(1, 1, true);
+                  this.$toast('第一页');
+                  return
+                }
               }
-            }else if(this.swiperindex==0){
-              if (2<=this.page) {
-                this.page--;
-                // this.$store.commit('pageStorage',{page: this.page});
-                this.loadMore(1);
-                // this.$refs.mySwiper.swiper.slideTo(1, 1, true);
-              }else {
-                this.$refs.mySwiper.swiper.slideTo(1, 1, true);
-                this.$toast('第一页');
-                return
-              }
+            }else {
+              this.reload();
             }
           },
         },
@@ -120,6 +126,7 @@ export default {
       bookList: [],
       page: 1,
       total: 1,
+      pageValue: '',
       totalShow: false, // 内容显示
       genealogyShow: false, // 目录显示 
       getGenealogyList: [], // 目录列表
@@ -130,14 +137,20 @@ export default {
       genealogyChecked: [], // 点击后的状态
       disabled: false, // 滚动禁用
       loading: false, // 加载状态
+      resLoading: true, // 加载中
+      noMore: false, // 加载状态
     };
   },
   methods: {
     // 数据获取
     loadMore(e) {
       this.loading = true; // 加载状态
-      this.$refs.mySwiper.swiper.slideTo(1, 1, true);
-      var url='/Web/book/page';
+      if (this.$refs.mySwiper != null && this.$refs.mySwiper.swiper.slideTo != null) {
+        this.$refs.mySwiper.swiper.slideTo(1, 1, true);
+      }else {
+        this.reload()
+      }
+      var url='/Web/book/memberLists';
       if (e==1) {
         console.log('数据获取===')
         var page = this.page;
@@ -152,11 +165,9 @@ export default {
         this.depth = 0;
         this.user_id = '';
       }
-      // 测试
-      var obj={page: page, page_size: 10, depth: this.depth, user_id: this.user_id, token: 'CDxNVFpHnet9GkxQjQrh3g=='} 
+      this.pageValue = page;
+      var obj={page: page, page_size: 10, depth: this.depth, user_id: this.user_id, token: this.token}
       
-      /* var obj={page: page, page_size: 10, depth: this.depth, user_id: this.user_id, token: this.token}
-       */
       console.log('obj===',obj)
       this.axios.post(url,obj)
       .then(res=>{
@@ -195,11 +206,8 @@ export default {
     // 获取目录
     menuGetGenealogy() {
       var url = '/Web/Book/contents';
-      // 测试
-      var obj = {token:'CDxNVFpHnet9GkxQjQrh3g=='};
+      var obj = {token: this.token};
       
-      /* var obj = {token: this.token};
-       */
       this.axios.post(url, obj)
       .then(res=>{
         var data = res.data.data;
@@ -223,18 +231,19 @@ export default {
       this.searchShow = true;
       this.disabled = false;
       if (this.searchValue != '') {
-        var url = '/web/Book/search';
-        // 测试
-        var obj = {keyword:this.searchValue, page:page, page_size: 20, token:'CDxNVFpHnet9GkxQjQrh3g=='};
+        var url = '/web/Book/searchMember';
+        var obj = {keyword:this.searchValue, page:page, page_size: 20, token: this.token};
         
-        /* var obj = {keyword:this.searchValue, page:page, page_size: 20, token: this.token};
-         */
         this.axios.post(url, obj)
         .then(res => {
-          // console.log('确定搜索时触发===',res);
+          console.log('确定搜索时触发===',res);
           var data = res.data;
-          // console.log(data.data.records)
+          console.log(data.data.records)
           if (data.data.records != [] && data.data.records.length !=0 ) {
+            if (this.searchList.length < 20) {
+              this.noMore = true;
+              this.resLoading = false;
+            }
             if (page>1) {
               this.searchList=this.searchList.concat(data.data.records)
             }else {
@@ -243,6 +252,8 @@ export default {
           }else {// 阻止滚动事件
             // console.log('阻止滚动事件===')
             this.disabled = true;
+            this.noMore = true;
+            this.resLoading = false;
           }
         })
       }
@@ -272,6 +283,7 @@ export default {
     //点击搜索结果
     getSearch(user_id, index) {
       this.user_id = user_id;
+      this.page = 1;
       this.loadMore(1);
       this.genealogyShow = false;
       // 选择后的样式改变
@@ -282,7 +294,16 @@ export default {
         var spliceIndex = this.genealogyChecked.indexOf(index);
         this.genealogyChecked.splice(spliceIndex, 1);
       } */
-    }
+    },
+    // 跳转指定页数
+    pageJump() {
+      this.page = this.pageValue;
+      if (this.page > this.total) {
+        this.page = this.total;
+      }
+      console.log(this.page )
+      this.loadMore(1)
+    },
   },
   computed: {
     // 滚动区高度
@@ -298,11 +319,12 @@ export default {
     console.log('获取当前窗口的80%高度==',window.innerHeight*0.8)
     // this.scrollerHeight = window.innerHeight;
 
-    // 测试
+    /* // 测试
+    this.token = 'S7vfTo0N4AmST/9ygdxBAw=='
     this.loadMore(1);
     this.menuGetGenealogy();
-    
-    /* // 初始化页面
+     */
+    // 初始化页面
     var u = navigator.userAgent;
     // console.log('终端判断===',u)
     var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1; //android终端
@@ -315,7 +337,7 @@ export default {
       this.token = window.getUserId();
       this.loadMore(1);
       this.menuGetGenealogy();
-    } */
+    }
   },
 };
 </script>
@@ -347,15 +369,27 @@ export default {
   border-bottom: 1px solid #EAC257;
   padding: 5px 10px;
 }
-.user-introduce{
+.user-text-left{
   text-align: left;
+}
+.user-introduce{
   font-size: 12px;
   margin-left: 10px;
 }
 .swiper-page{
+  display: flex;
   font-size: 10px;
   border-bottom: 1px solid #EAC257;
   padding: 10px 0 5px 0;
+  justify-content: center;
+  align-items: center;
+}
+.swiper-page div{
+  margin-left: 10px;
+}
+.jump{
+  display: inline;
+  margin-left: 6px;
 }
 .section-swiper {
   /* width: 360px; */
@@ -374,30 +408,6 @@ export default {
   color: #EAC257;
 }
 /* 目录 */
-.genealogy-header {
-  width: 250px;
-  height: 40px;
-  line-height: 40px;
-  text-align: left;
-  font-size: 18px;
-  background: rgba(252,251,231,1);
-  display: flex;
-  align-items: center;
-}
-.el-icon-arrow-left {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 40px;
-  height: 40px;
-  text-align: center;
-  line-height: 40px;
-}
-.genealogy-header > p {
-  flex: 1;
-  text-align: center;
-  font-size: 20px
-}
 .genealogy-section {
   width: 250px;
   height: 350px;

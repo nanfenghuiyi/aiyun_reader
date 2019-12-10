@@ -20,12 +20,15 @@ import 'swiper/dist/css/swiper.css'
 import VueAwesomeSwiper from 'vue-awesome-swiper'
 // 阿里图库
 import './assets/font/iconfont.css'
+// 树状图
+import Vue2OrgTree from 'vue2-org-tree'
 
 Vue.use(Vuex)
 Vue.use(ElementUI)
 Vue.use(Vant)
 Vue.use(Viewer)
 Vue.use(VueAwesomeSwiper)
+Vue.use(Vue2OrgTree)
 
 // 或者添加VueLazyload 选项
 Vue.use(VueLazyload, {

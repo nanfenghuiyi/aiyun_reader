@@ -1,11 +1,11 @@
 <template>
   <div class="container">
     <van-tabs v-model="active" type="card" sticky>
-      <van-tab title="表格式">
-        <TableFormat></TableFormat>
-      </van-tab>
       <van-tab title="文案式">
         <Copywriting></Copywriting>
+      </van-tab>
+      <van-tab title="表格式">
+        <TableFormat></TableFormat>
       </van-tab>
     </van-tabs>
   </div>

@@ -33,7 +33,6 @@ export default {
 
 <style scoped>
 .container{}
-
 </style>
 
 <style>
@@ -42,6 +41,7 @@ export default {
   margin: 0;
 }
 .van-tabs__nav--card .van-tab{
+  line-height: 30px;
   color: #664237;
 }
 .van-tabs__nav--card .van-tab.van-tab--active{

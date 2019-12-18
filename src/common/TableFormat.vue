@@ -9,9 +9,9 @@
       </div>
       <div class="swiper-page">
         第{{page}}页 共{{total}}页
-        <div>
+        <div class="swiper-jump">
           <input type="number" style="width:30px; text-align:center" v-model="pageValue">
-          <button class="jump" @click="pageJump">跳转</button>
+          <div class="jump" @click="pageJump">跳转</div>
         </div>
       </div>
     </div>
@@ -247,7 +247,9 @@ export default {
         this.bookList = data.data.records;
         this.loading = false;
       }).catch(err=>{
-        console.log(err)
+        console.log(err);
+        this.$toast('服务器异常');
+        this.loading = false;
       })
     },
     // 返回当前首页
@@ -362,9 +364,13 @@ export default {
     },
     // 跳转指定页数
     pageJump() {
-      this.page = this.pageValue;
-      if (this.page > this.total) {
-        this.page = this.total;
+      if (this.pageValue != '') {
+        this.page = this.pageValue;
+        if (this.page > this.total) {
+          this.page = this.total;
+        }
+      }else {
+        this.page = 1;
       }
       console.log(this.page )
       this.loadMore(1)
@@ -378,6 +384,9 @@ export default {
       return (window.innerHeight - 44 - 60) + 'px';
     }
   },
+  // beforeCreate() {
+  //   this.loading = true;
+  // },
   mounted() {
     // 获取当前窗口的高度
     console.log('获取当前窗口的高度==',window.innerHeight)
@@ -385,7 +394,7 @@ export default {
     // this.scrollerHeight = window.innerHeight;
 
     /* // 测试
-    this.token = 'S7vfTo0N4AmST/9ygdxBAw=='
+    this.token = 'ZRt671OQG6Wo3QAHjliTKQ=='
     this.loadMore(1);
     this.menuGetGenealogy();
      */
@@ -451,16 +460,24 @@ td {
   display: flex;
   font-size: 10px;
   border-bottom: 1px solid #EAC257;
-  padding: 10px 0 5px 0;
+  padding: 10px 0 10px 0;
   justify-content: center;
   align-items: center;
 }
 .swiper-page div{
   margin-left: 10px;
 }
+.swiper-jump{
+  display: flex;
+}
 .jump{
-  display: inline;
+  line-height: 15px;
+  background: #999;
   margin-left: 6px;
+  padding: 5px;
+}
+.jump-bg{
+  background: #EAC257
 }
 .section-swiper {
   /* width: 360px; */
@@ -543,7 +560,7 @@ td {
 }
 .menu{
   position:fixed;
-  top: 30px;
+  top: 35px;
   left: 15px;
   width: 30px;
   height: 30px;

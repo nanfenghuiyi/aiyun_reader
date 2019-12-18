@@ -10,9 +10,10 @@
       <div>
       <div class="swiper-page">
         第{{page}}页 共{{total}}页
-        <div>
+        <div class="swiper-jump">
           <input type="number" style="width:30px; text-align:center" v-model="pageValue">
-          <button class="jump" @click="pageJump">跳转</button>
+          <div class="jump" @click="pageJump">跳转</div>
+          <div class="jump jump-bg" @click="newsCorrect" v-text="correctShow?'取消纠正':'信息纠正'"></div>
         </div>
       </div>
       </div>
@@ -25,7 +26,8 @@
           <el-row class="el-row" v-for="(item, i) of bookList" :key="i">
             <el-col :span="4"><div class="grid-content bg-purple user-text-left">{{ item.generation }}</div></el-col>
             <el-col :span="4"><div class="grid-content bg-purple-light user-text-left">{{ item.name }}</div></el-col>
-            <el-col :span="16"><div class="grid-content bg-purple user-text-left user-introduce">{{ item.brief }}</div></el-col>
+            <el-col :span="14"><div class="grid-content bg-purple user-text-left user-introduce">{{ item.brief }}</div></el-col>
+            <el-col :span="2" v-if="correctShow" @click.native="modifyPopup(item)"><div class="correct">纠正</div></el-col>
           </el-row>
         </div>
       </swiper-slide>
@@ -72,6 +74,42 @@
           </ul>
             <p v-if="resLoading">加载中...</p>
             <p v-if="noMore">没有更多了</p>
+        </div>
+      </van-popup>
+    </div>
+    <!-- 修改页面 -->
+    <div class="modify-section">
+      <van-popup round v-model="modifyShow" :style="{ width: '90%' }" :close-on-click-overlay="false">
+        <div class="modify-layout">
+          <div class="modify-title">请对以下族亲信息进行补充或纠正</div>
+          <div class="mt">世系：<span v-text="generationShow"></span></div>
+          <div class="mt">姓名：<span v-text="nameShow"></span></div>
+          <div class="mt">简介：</div>
+          <div class="brief-layout" v-text="briefShow"></div>
+          <div>
+            <p>更改姓名：
+              <input type="text" v-model="modifyName">
+            </p>
+          </div>
+          <div class="mt">
+            更改简介：
+            <textarea @focus="changefocus" rows="10" style="width:100%" v-model="modifyBrief" v-text="briefShow"></textarea>
+          </div>
+          <div class="mt">
+            验证人：
+              <el-select v-model="verifierValue" placeholder="请选择验证人">
+                <el-option
+                  v-for="item in options"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value">
+                </el-option>
+              </el-select>
+          </div>
+          <div class="mt">
+            <van-button class="modify-btn" color="#ccc" @click="modifyCancel">取消</van-button>
+            <van-button class="modify-btn modify-btn-left" color="#EAC257" @click="submit">提交</van-button>
+          </div>
         </div>
       </van-popup>
     </div>
@@ -139,6 +177,24 @@ export default {
       loading: false, // 加载状态
       resLoading: true, // 加载中
       noMore: false, // 加载状态
+      // 内容修改
+      correctShow: false, // 纠正按钮显示
+      modifyShow: false,
+      generationShow: '', // 世系数据
+      modifyName: '', // 姓名
+      nameShow: '', // 更改后的姓名
+      briefShow: '', // 简介
+      modifyBrief: '', // 更改后的简介
+      verifierValue: '', // 验证人
+      profile_id: '', // 资料ID
+      specified_user_id: '', // 管理员ID
+      // 验证人列表
+      options: [
+        // {
+        //   value: '123',
+        //   label: '黄金糕'
+        // }
+      ],
     };
   },
   methods: {
@@ -182,7 +238,10 @@ export default {
         this.bookList = data.data.records;
         this.loading = false;
       }).catch(err=>{
-        console.log(err)
+        console.log(err);
+        // this.reload();
+        this.$toast('服务器异常');
+        this.loading = false;
       })
     },
     // 返回当前首页
@@ -297,12 +356,110 @@ export default {
     },
     // 跳转指定页数
     pageJump() {
-      this.page = this.pageValue;
-      if (this.page > this.total) {
-        this.page = this.total;
+      if (this.pageValue != '') {
+        this.page = this.pageValue;
+        if (this.page > this.total) {
+          this.page = this.total;
+        }
+      }else {
+        this.page = 1;
       }
-      console.log(this.page )
+      console.log(this.page)
       this.loadMore(1)
+    },
+    // 信息纠正
+    newsCorrect() {
+      this.correctShow = !this.correctShow;
+    },
+    // 修改页面显示
+    modifyPopup(item) {
+      this.modifyShow = true;
+      this.generationShow = item.genealogy;
+      this.nameShow = item.name;
+      this.modifyName = item.name;
+      this.briefShow = item.brief;
+      this.modifyBrief = item.brief;
+      this.profile_id = item.profile_id;
+      var url = '/web/ProfileIssues/supervisors';
+      var token = this.token;
+      var obj = {token};
+      this.axios.post(url,obj)
+      .then(res=>{
+        // console.log(res);
+        var data = res.data;
+        if(data.code == 1){
+          var optionList = data.data.clan_supervisors
+          // console.log(optionList);
+          for (var item of optionList) {
+            var value = item.user_id;
+            var label = item.name;
+            var obj = {value,label}
+            this.options = this.options.concat(obj);
+          }
+        }
+      }).catch(err =>{
+        console.log(err);
+      })
+    },
+    // 确认修改
+    submit() {
+      var url = '/web/ProfileIssues/addIssues';
+      var profile_id = this.profile_id;
+      var specified_user_id = this.verifierValue;
+      var name = this.modifyName;
+      var brief = this.modifyBrief;
+      var token = this.token;
+      if (name == '') {
+        this.$toast('姓名不能为空');
+        return
+      }
+      if (specified_user_id == '') {
+        this.$toast('验证人不能为空');
+        return
+      }
+      var obj = {profile_id, specified_user_id, name, brief, token};
+      console.log(obj)
+      this.axios.post(url, obj)
+      .then(res =>{
+        console.log(res);
+        var data = res.data;
+        if(data.code == 1){
+          this.$toast(data.msg);
+          this.modifyShow = false;
+          this.options = [];
+          this.modifyName = '';
+          this.modifyBrief = '';
+          this.verifierValue = '';
+        }else{
+          this.$toast(data.msg);
+          this.modifyShow = false;
+          this.options = [];
+          this.modifyName = '';
+          this.modifyBrief = '';
+          this.verifierValue = '';
+        }
+      }).catch(err =>{
+        console.log(err);
+        this.$toast('服务器异常')
+      })
+      // this.modifyShow = false;
+    },   
+    // 取消页面修改
+    modifyCancel() {
+      this.modifyShow = false;
+      this.options = [];
+      this.verifierValue = '';
+    },
+    // focus事件
+    changefocus(){
+      let u = navigator.userAgent, app = navigator.appVersion;
+      let isAndroid = u.indexOf('Android') > -1 || u.indexOf('Linux') > -1;
+      if(isAndroid){
+        setTimeout(function() {
+          document.activeElement.scrollIntoViewIfNeeded();
+          document.activeElement.scrollIntoView();
+        }, 500);       
+      }
     },
   },
   computed: {
@@ -320,7 +477,7 @@ export default {
     // this.scrollerHeight = window.innerHeight;
 
     /* // 测试
-    this.token = 'S7vfTo0N4AmST/9ygdxBAw=='
+    this.token = 'ZRt671OQG6Wo3QAHjliTKQ=='
     this.loadMore(1);
     this.menuGetGenealogy();
      */
@@ -362,15 +519,21 @@ export default {
   width: 375px;
   /* background: red; */
 }
-.swiper-style table {
-  width: 100%;
-}
 .el-row{
   border-bottom: 1px solid #EAC257;
-  padding: 5px 10px;
+  padding: 8px 10px;
 }
 .user-text-left{
   text-align: left;
+}
+.correct{
+  position: absolute;
+  width: 40px;
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+  background:#EAC257;
+  padding: 2px 0;
 }
 .user-introduce{
   font-size: 12px;
@@ -380,16 +543,24 @@ export default {
   display: flex;
   font-size: 10px;
   border-bottom: 1px solid #EAC257;
-  padding: 10px 0 5px 0;
+  padding: 10px 0 10px 0;
   justify-content: center;
   align-items: center;
 }
 .swiper-page div{
   margin-left: 10px;
 }
+.swiper-jump{
+  display: flex;
+}
 .jump{
-  display: inline;
+  line-height: 15px;
+  background: #999;
   margin-left: 6px;
+  padding: 5px;
+}
+.jump-bg{
+  background: #EAC257
 }
 .section-swiper {
   /* width: 360px; */
@@ -423,7 +594,7 @@ export default {
 }
 .menu{
   position:fixed;
-  top: 30px;
+  top: 35px;
   left: 15px;
   width: 30px;
   height: 30px;
@@ -454,5 +625,44 @@ export default {
 .search-father{
   font-size: 10px;
   color: #664237;
+}
+/* 修改页面 */
+.modify-layout{
+  height: 500px;
+  font-size: 14px;
+  text-align: left;
+  background: rgba(252,251,231,1);
+  padding: 20px;
+  overflow-y: scroll; 
+}
+.modify-title{
+  color: #EAC257;
+  font-weight: bold;
+}
+.brief-layout{
+  display: block;
+  width: 80%;
+}
+.modify-btn{
+  width: 130px;
+  font-size: 18px
+}
+.modify-btn-left{
+  margin-left: 12%;
+}
+.mt{
+  margin-top: 10px;
+}
+</style>
+
+<style>
+.modify-section .van-popup{
+  z-index: 2001 !important;
+}
+.van-overlay {
+  z-index: 2000 !important;
+}
+.el-select-dropdown{
+  z-index: 2001 !important;
 }
 </style>

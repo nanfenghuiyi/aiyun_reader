@@ -82,18 +82,19 @@
       <van-popup round v-model="modifyShow" :style="{ width: '90%' }" :close-on-click-overlay="false">
         <div class="modify-layout">
           <div class="modify-title">请对以下族亲信息进行补充或纠正</div>
+          <div class="modify-title mt">原有信息</div>
           <div class="mt">世系：<span v-text="generationShow"></span></div>
           <div class="mt">姓名：<span v-text="nameShow"></span></div>
           <div class="mt">简介：</div>
           <div class="brief-layout" v-text="briefShow"></div>
-          <div>
-            <p>更改姓名：
-              <input type="text" v-model="modifyName">
-            </p>
+          <div class="modify-title mt">纠正信息</div>
+          <div class="mt">
+            更改姓名：
+            <input type="text" v-model="modifyName">
           </div>
           <div class="mt">
             更改简介：
-            <textarea @focus="changefocus" rows="10" style="width:100%" v-model="modifyBrief" v-text="briefShow"></textarea>
+            <textarea @focus="changefocus" rows="5" style="width:100%" v-model="modifyBrief" v-text="briefShow"></textarea>
           </div>
           <div class="mt">
             验证人：
@@ -377,7 +378,8 @@ export default {
       this.generationShow = item.genealogy;
       this.nameShow = item.name;
       this.modifyName = item.name;
-      this.briefShow = item.brief;
+      // this.briefShow = item.brief;
+      this.briefShow = '或给哦亲何工IQ哦给仅供你钱够  气魄结果破解器破解跑紧迫感加强破解股票群殴赶紧去 国际棋牌寄过去【我估计奇葩【我赶紧跑请个假【期间股票及其评价该片区 群殴几个片区就陪我军坡节发过去破个【前几个【迫切JPG金桥国际【强迫感觉【前几个【前景更加脚后跟【外派机构【家居管理卡恩换个卡爱看机会那你回家；阿糊弄一安慰人';
       this.modifyBrief = item.brief;
       this.profile_id = item.profile_id;
       var url = '/web/ProfileIssues/supervisors';
@@ -476,12 +478,12 @@ export default {
     console.log('获取当前窗口的80%高度==',window.innerHeight*0.8)
     // this.scrollerHeight = window.innerHeight;
 
-    /* // 测试
+    // 测试
     this.token = 'ZRt671OQG6Wo3QAHjliTKQ=='
     this.loadMore(1);
     this.menuGetGenealogy();
-     */
-    // 初始化页面
+    
+    /* // 初始化页面
     var u = navigator.userAgent;
     // console.log('终端判断===',u)
     var isAndroid = u.indexOf('Android') > -1 || u.indexOf('Adr') > -1; //android终端
@@ -494,7 +496,7 @@ export default {
       this.token = window.getUserId();
       this.loadMore(1);
       this.menuGetGenealogy();
-    }
+    } */
   },
 };
 </script>
@@ -641,7 +643,10 @@ export default {
 }
 .brief-layout{
   display: block;
-  width: 80%;
+  width: 100%;
+  height: 80px;
+  border: 1px solid #999;
+  overflow-y: scroll;
 }
 .modify-btn{
   width: 130px;
@@ -651,7 +656,7 @@ export default {
   margin-left: 12%;
 }
 .mt{
-  margin-top: 10px;
+  margin-top: 8px;
 }
 </style>
 
